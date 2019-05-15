@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var mongoose = require('mongoose');
 var Goods = require('../models/goods');
+var User = require('../models/users');
 
 //连接MongoDB数据库
 mongoose.connect('mongodb://127.0.0.1:27017/vue');
@@ -21,9 +22,24 @@ mongoose.connection.on("disconnected", function () {
 router.get("/", function (req, res, next) {
     let page = parseInt(req.param("page"));
     let pageSize = parseInt(req.param("pageSize"));
+    let priceLevel = req.param("priceLevel");
     let sort = req.param("sort");
     let skip = (page - 1) * pageSize;
     let params = {};
+    if (priceLevel != 'all') {
+        switch (priceLevel) {
+            case '0': priceGt = 0; priceLte = 100; break;
+            case '1': priceGt = 100; priceLte = 500; break;
+            case '2': priceGt = 500; priceLte = 1000; break;
+            case '3': priceGt = 1000; priceLte = 5000; break;
+        }
+        params = {
+            salePrice: {
+                $gt: priceGt,
+                $lte: priceLte
+            }
+        }
+    }
     let goodsModel = Goods.find(params).skip(skip).limit(pageSize);
     goodsModel.sort({ 'salePrice': sort });
     goodsModel.exec(function (err, doc) {
@@ -88,10 +104,17 @@ router.get("/list", function (req, res, next) {
     })
 });
 
+// router.get("/test", function (req, res, next) {
+//     res.send("test");
+// });
+router.post("/test", function (req, res, next) {
+    res.json({
+        msg: req.body.productId
+    })
+});
 //加入到购物车
 router.post("/addCart", function (req, res, next) {
     var userId = '100000077', productId = req.body.productId;
-    var User = require('../models/user');
     User.findOne({ userId: userId }, function (err, userDoc) {
         if (err) {
             res.json({

@@ -48,17 +48,29 @@
                   <div class="pic">
                     <a href="#">
                       <img :src="'/static/'+item.productImage" alt>
+                      <!-- <img v-lazy="'/static/'+item.productImage" alt> -->
                     </a>
                   </div>
                   <div class="main">
                     <div class="name">{{item.productName}}</div>
                     <div class="price">{{item.salePrice}}</div>
                     <div class="btn-area">
-                      <a href="javascript:;" class="btn btn--m">加入购物车</a>
+                      <a
+                        href="javascript:;"
+                        class="btn btn--m"
+                        @click="addCart(item.productId)"
+                      >加入购物车</a>
                     </div>
                   </div>
                 </li>
               </ul>
+              <div
+                v-infinite-scroll="loadMore"
+                infinite-scroll-disabled="busy"
+                infinite-scroll-distance="30"
+              >
+                <img src="../../static/loading/loading-spinning-bubbles.svg" v-show="loading">
+              </div>
             </div>
           </div>
         </div>
@@ -83,6 +95,10 @@ export default {
       priceFilter: [
         {
           startPrice: "0.00",
+          endPrice: "100.00"
+        },
+        {
+          startPrice: "100.00",
           endPrice: "500.00"
         },
         {
@@ -91,7 +107,7 @@ export default {
         },
         {
           startPrice: "1000.00",
-          endPrice: "2000.00"
+          endPrice: "5000.00"
         }
       ],
       priceChecked: "all",
@@ -99,7 +115,9 @@ export default {
       overLayFlag: false,
       sortFlag: true,
       page: 1,
-      pageSize: 8
+      pageSize: 8,
+      loading: false,
+      busy: true
     };
   },
   components: {
@@ -111,11 +129,12 @@ export default {
     this.getGoodsList();
   },
   methods: {
-    getGoodsList() {
+    getGoodsList(flag) {
       var param = {
         page: this.page,
         pageSize: this.pageSize,
-        sort: this.sortFlag ? 1 : -1
+        sort: this.sortFlag ? 1 : -1,
+        priceLevel: this.priceChecked
       };
       axios
         .get("/goods", {
@@ -123,13 +142,34 @@ export default {
         })
         .then(result => {
           var res = result.data;
-          this.goodsList = res.result.list;
+          // console.log(res.result.count);
+          if (flag) {
+            this.goodsList = this.goodsList.concat(res.result.list);
+            if (res.result.count == 0) {
+              this.busy = true;
+              this.loading = false;
+            } else {
+              this.loading = true;
+              this.busy = false;
+            }
+          } else {
+            this.goodsList = res.result.list;
+            this.busy = false;
+            this.loading = true;
+          }
         });
     },
     sortGoods() {
       this.sortFlag = !this.sortFlag;
       this.page = 1;
       this.getGoodsList();
+    },
+    loadMore() {
+      this.busy = true;
+      setTimeout(() => {
+        this.page++;
+        this.getGoodsList(true);
+      }, 500);
     },
     showFilterPop() {
       this.filterBy = true;
@@ -141,7 +181,25 @@ export default {
     },
     setPriceFilter(index) {
       this.priceChecked = index;
+      this.page = 1;
+      this.getGoodsList();
       this.closePop();
+    },
+    addCart(productId) {
+      // axios.post("/goods/test", {
+      //   productId: productId
+      // });
+      axios
+        .post("/goods/addCart", {
+          productId: productId
+        })
+        .then(res => {
+          if (res.data.status == 0) {
+            alert("加入成功");
+          } else {
+            alert(res.data.msg);
+          }
+        });
     }
   }
 };
