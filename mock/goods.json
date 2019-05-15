@@ -1,0 +1,24 @@
+{
+    "status":"0",
+    "msg":"",
+    "results":[
+        {
+            "goodsId":"101",
+            "goodsName":"xx",
+            "goodsPrice":199,
+            "goodsImg":"1.jpg"
+        },
+        {
+            "goodsId":"102",
+            "goodsName":"yy",
+            "goodsPrice":299,
+            "goodsImg":"2.jpg"
+        },
+        {
+            "goodsId":"103",
+            "goodsName":"zz",
+            "goodsPrice":399,
+            "goodsImg":"3.jpg"
+        }
+    ]
+}
