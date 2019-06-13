@@ -11,8 +11,8 @@
           <a href="javascript:void(0)" class="default cur">Default</a>
           <a @click="sortGoods" href="javascript:void(0)" class="price">
             Price
-            <svg class="icon icon-arrow-short">
-              <use xlink:href="#icon-arrow-short"></use>
+            <svg class="icon icon-arrow-short" :class="{'sort-up':!sortFlag}">
+              <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-arrow-short"></use>
             </svg>
           </a>
           <a href="javascript:void(0)" class="filterby stopPop" @click="showFilterPop">Filter by</a>
@@ -77,6 +77,19 @@
       </div>
     </div>
     <div class="md-overlay" v-show="overLayFlag" @click="closePop"></div>
+    <modal :mdShow="mdShow" @close="closeModal">
+      <p slot="message">please login</p>
+      <p slot="btnGroup">
+        <a class="btn btn--m" @click="closeModal">close</a>
+      </p>
+    </modal>
+    <modal :mdShow="mdShowCart" @close="closeModal">
+      <p slot="message">cart succeed</p>
+      <p slot="btnGroup">
+        <a class="btn btn--m" @click="closeModal">continue shopping</a>
+        <router-link class="btn btn--m" to="/cart">go to cart</router-link>
+      </p>
+    </modal>
     <nav-footer></nav-footer>
   </div>
 </template>
@@ -88,6 +101,7 @@ import navHeader from "../components/header";
 import navFooter from "../components/footer";
 import navBread from "../components/bread";
 import axios from "axios";
+import modal from "../components/modal";
 export default {
   data() {
     return {
@@ -115,15 +129,18 @@ export default {
       overLayFlag: false,
       sortFlag: true,
       page: 1,
+      mdShow: false,
+      mdShowCart: false,
       pageSize: 8,
       loading: false,
       busy: true
     };
   },
   components: {
-    navHeader: navHeader,
-    navFooter: navFooter,
-    navBread: navBread
+    navHeader,
+    navFooter,
+    navBread,
+    modal
   },
   mounted: function() {
     this.getGoodsList();
@@ -137,7 +154,7 @@ export default {
         priceLevel: this.priceChecked
       };
       axios
-        .get("/goods", {
+        .get("/goods/list", {
           params: param
         })
         .then(result => {
@@ -195,11 +212,15 @@ export default {
         })
         .then(res => {
           if (res.data.status == 0) {
-            alert("加入成功");
+            this.mdShowCart = true;
           } else {
-            alert(res.data.msg);
+            this.mdShow = true;
           }
         });
+    },
+    closeModal() {
+      this.mdShow = false;
+      this.mdShowCart = false;
     }
   }
 };
